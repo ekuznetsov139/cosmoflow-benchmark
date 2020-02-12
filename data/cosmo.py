@@ -17,17 +17,22 @@ def _parse_data(sample_proto, shape):
                     'physPar': tf.FixedLenFeature([], tf.string)}
     )
     # Decode the data and normalize
-    data = tf.decode_raw(parsed_example['3Dmap'], tf.float32)    
+    data = tf.io.parse_tensor(parsed_example['3Dmap'], tf.float16)
     data = tf.reshape(data, shape)
-    data /= (tf.reduce_sum(data) / np.prod(shape))
+    # normalization has been moved to the main model 
+    #  (we don't want to cast to float32 on the CPU) 
+    #data /= (tf.reduce_sum(data) / np.prod(shape))
     # Decode the targets
-    label = tf.decode_raw(parsed_example['unitPar'], tf.float32)
+    label = tf.io.parse_tensor(parsed_example['unitPar'], tf.float32)
+    label = tf.reshape(label, (4,))
+#    with tf.control_dependencies([tf.print(data,label)]):
     return data, label
 
 def construct_dataset(filenames, batch_size, n_epochs, sample_shape,
-                      rank=0, n_ranks=1, shard=True, shuffle=False,                      
+                      rank=0, n_ranks=1, shard=True, shuffle=False,
                       local_fs=False, shuffle_buffer_size=128):
     # Define the dataset from the list of files
+    #print(filenames)
     data = tf.data.Dataset.from_tensor_slices(filenames)
     if (shard and local_fs):
         local_rank = int(hvd.local_rank())
@@ -39,13 +44,14 @@ def construct_dataset(filenames, batch_size, n_epochs, sample_shape,
         data = data.shuffle(len(filenames), reshuffle_each_iteration=True)
     # Parse TFRecords
     parse_data = partial(_parse_data, shape=sample_shape)
-    data = data.apply(tf.data.TFRecordDataset).map(parse_data, num_parallel_calls=4)
+    data = tf.data.TFRecordDataset(data) #, compression_type="ZLIB") #, buffer_size=100000000, num_parallel_reads=4)
+    data = data.map(parse_data, num_parallel_calls=4)
     # Localized sample shuffling (note: imperfect global shuffling)
     if shuffle:
         data = data.shuffle(shuffle_buffer_size)
     data = data.repeat(n_epochs)
     data = data.batch(batch_size, drop_remainder=True)
-    return data.prefetch(4)
+    return data.prefetch(8)
 
 def get_datasets(data_dir, sample_shape, n_train_files, n_valid_files,
                  samples_per_file, batch_size, n_epochs,

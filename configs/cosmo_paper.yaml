@@ -1,10 +1,10 @@
-output_dir: $SCRATCH/cosmoflow-benchmark/cosmoflow-latest
+output_dir: $SCRATCH/cosmoflow-benchmark/cosmoflow-paper-adadelta
 
 data:
     name: cosmo
     #data_dir: /project/projectdirs/m3363/www/cosmoUniverse_2019_02_4parE/dim128_cube_nT4
     #data_dir: $DW_PERSISTENT_STRIPED_cosmobb/cosmoUniverse_2019_02_4parE/dim128_cube_nT4
-    data_dir: /data/fp16
+    data_dir: /data
     n_train_files: 640
     n_valid_files: 256
     samples_per_file: 64
@@ -13,19 +13,21 @@ data:
     n_epochs: 40
 
 model:
-    name: cosmoflow
+    name: cosmoflow_paper
     input_shape: [128, 128, 128, 4]
     target_size: 4
-    dropout: 0.2
+    dropout: 0.5
 
 optimizer:
     name: Adadelta
-    lr: 0.5
+    lr: 0.05
     lr_scaling: none
 
 train:
     loss: mse
     metrics: ['mae']
     lr_schedule:
+        8: 0.5
         16: 0.5
+        24: 0.5
         32: 0.5

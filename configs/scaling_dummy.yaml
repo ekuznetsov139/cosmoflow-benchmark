@@ -4,21 +4,21 @@ data:
     name: dummy
     n_train: 64
     n_valid: 0
-    shard: false
+    shard: true
     sample_shape: [128, 128, 128, 4]
     target_shape: [4]
     batch_size: 1
     n_epochs: 4
 
 model:
-    name: cosmoflow
+    name: cosmoflow_orig
     input_shape: [128, 128, 128, 4]
     target_size: 4
     dropout: 0.2
 
 optimizer:
-    name: Adadelta
-    lr: 0.5
+    name: Adam
+    lr: 0.0001
     lr_scaling: none
 
 train:

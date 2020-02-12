@@ -1,19 +1,19 @@
-output_dir: $SCRATCH/cosmoflow-benchmark/scaling-n${SLURM_JOB_NUM_NODES}
+output_dir: $SCRATCH/cosmoflow-benchmark/cosmoflow-old-adam
 
 data:
     name: cosmo
-    data_dir: /data/cosmoUniverse_2019_02_4parE/dim128_cube_nT4
+    #data_dir: /project/projectdirs/m3363/www/cosmoUniverse_2019_02_4parE/dim128_cube_nT4
     #data_dir: $DW_PERSISTENT_STRIPED_cosmobb/cosmoUniverse_2019_02_4parE/dim128_cube_nT4
-    n_train_files: 4
-    n_valid_files: 0
+    data_dir: /data
+    n_train_files: 640
+    n_valid_files: 256
     samples_per_file: 64
-    shard: true
     sample_shape: [128, 128, 128, 4]
     batch_size: 1
-    n_epochs: 4
+    n_epochs: 40
 
 model:
-    name: cosmoflow_old
+    name: cosmoflow_orig
     input_shape: [128, 128, 128, 4]
     target_size: 4
     dropout: 0.2
@@ -26,3 +26,8 @@ optimizer:
 train:
     loss: mse
     metrics: ['mae']
+    lr_schedule:
+        8: 0.5
+        16: 0.5
+        24: 0.5
+        32: 0.5
